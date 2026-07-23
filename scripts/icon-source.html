@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100vmin;
+        height: 100vmin;
+        background: transparent;
+        overflow: hidden;
+      }
+      .stage {
+        position: relative;
+        width: 100vmin;
+        height: 100vmin;
+      }
+      .dock-glow {
+        position: absolute;
+        left: 18vmin;
+        top: 66vmin;
+        width: 64vmin;
+        height: 16vmin;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, rgba(124, 140, 255, 0.55) 0%, rgba(124, 140, 255, 0) 70%);
+        filter: blur(2.4vmin);
+      }
+      .dock {
+        position: absolute;
+        left: 9vmin;
+        top: 74vmin;
+        width: 82vmin;
+        height: 15vmin;
+        border-radius: 7.5vmin;
+        background: linear-gradient(180deg, #2c2d38 0%, #1b1c22 100%);
+        box-shadow: 0 3vmin 6vmin rgba(0, 0, 0, 0.5);
+      }
+      .dock-highlight {
+        position: absolute;
+        left: 15vmin;
+        top: 76.5vmin;
+        width: 70vmin;
+        height: 2.4vmin;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .folder {
+        position: absolute;
+        clip-path: polygon(0% 18%, 36% 18%, 46% 6%, 100% 6%, 100% 100%, 0% 100%);
+      }
+      .folder-back {
+        left: 12vmin;
+        top: 32vmin;
+        width: 44vmin;
+        height: 36vmin;
+        background: linear-gradient(155deg, #4d57c4 0%, #343c93 100%);
+        transform: rotate(-11deg);
+        box-shadow: 0 2vmin 4vmin rgba(15, 16, 40, 0.4);
+      }
+      .folder-mid {
+        left: 32vmin;
+        top: 27vmin;
+        width: 48vmin;
+        height: 40vmin;
+        background: linear-gradient(155deg, #7280e0 0%, #4d57c4 100%);
+        transform: rotate(9deg);
+        box-shadow: 0 2.5vmin 5vmin rgba(15, 16, 40, 0.42);
+      }
+      .folder-front {
+        left: 21vmin;
+        top: 21vmin;
+        width: 58vmin;
+        height: 47vmin;
+        background: linear-gradient(155deg, #aab3ff 0%, #7c8cff 52%, #6270e0 100%);
+        transform: rotate(-3deg);
+        box-shadow: 0 3vmin 6vmin rgba(15, 16, 40, 0.48);
+      }
+      .folder-front-sheen {
+        position: absolute;
+        left: 21vmin;
+        top: 21vmin;
+        width: 58vmin;
+        height: 47vmin;
+        transform: rotate(-3deg);
+        background: linear-gradient(155deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 40%);
+        clip-path: polygon(0% 18%, 36% 18%, 46% 6%, 100% 6%, 100% 100%, 0% 100%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="dock-glow"></div>
+      <div class="folder folder-back"></div>
+      <div class="folder folder-mid"></div>
+      <div class="folder folder-front"></div>
+      <div class="folder-front-sheen"></div>
+      <div class="dock"></div>
+      <div class="dock-highlight"></div>
+    </div>
+  </body>
+</html>
