@@ -19,6 +19,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Tag this version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
       - run: npm run electron:release:win
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
