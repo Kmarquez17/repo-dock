@@ -47,6 +47,15 @@ export interface RepoGitStatus {
   dirty: boolean;
 }
 
+export type UpdateStatus =
+  | { state: "idle" }
+  | { state: "checking" }
+  | { state: "available"; version: string }
+  | { state: "not-available" }
+  | { state: "downloading"; percent: number }
+  | { state: "downloaded"; version: string }
+  | { state: "error"; message: string };
+
 export interface RepoLauncherApi {
   getRootFolders: () => Promise<RootFolder[]>;
   pickFolder: () => Promise<{ path: string; suggestedName: string } | null>;
@@ -71,4 +80,9 @@ export interface RepoLauncherApi {
   setShortcut: (accelerator: string) => Promise<TokenUpdateResult>;
   getAutostart: () => Promise<boolean>;
   setAutostart: (enabled: boolean) => Promise<boolean>;
+  getAppVersion: () => Promise<string>;
+  getUpdateStatus: () => Promise<UpdateStatus>;
+  checkForUpdates: () => Promise<void>;
+  installUpdate: () => Promise<void>;
+  onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void;
 }

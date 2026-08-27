@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { InstalledIdes, TokenUpdateResult } from "../types/ipc";
+import type { InstalledIdes, TokenUpdateResult, UpdateStatus } from "../types/ipc";
 
 interface SettingsPanelProps {
   installedIdes: InstalledIdes;
@@ -48,16 +48,40 @@ function formatAccelerator(accelerator: string): string {
   return accelerator.replace("CommandOrControl", "Ctrl");
 }
 
+function updateStatusLabel(status: UpdateStatus): string {
+  switch (status.state) {
+    case "idle":
+      return "Sin chequear todavía.";
+    case "checking":
+      return "Buscando actualizaciones…";
+    case "available":
+      return `Nueva versión ${status.version} disponible, descargando…`;
+    case "not-available":
+      return "Estás en la última versión.";
+    case "downloading":
+      return `Descargando actualización… ${status.percent}%`;
+    case "downloaded":
+      return `Versión ${status.version} lista. Se instala al reiniciar la app.`;
+    case "error":
+      return `Error al buscar actualizaciones: ${status.message}`;
+  }
+}
+
 export function SettingsPanel({ installedIdes }: SettingsPanelProps) {
   const [shortcut, setShortcutState] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
   const [shortcutStatus, setShortcutStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [autostart, setAutostartState] = useState(false);
   const [autostartLoading, setAutostartLoading] = useState(false);
+  const [appVersion, setAppVersion] = useState("");
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
 
   useEffect(() => {
     window.api.getShortcut().then(setShortcutState);
     window.api.getAutostart().then(setAutostartState);
+    window.api.getAppVersion().then(setAppVersion);
+    window.api.getUpdateStatus().then(setUpdateStatus);
+    return window.api.onUpdateStatus(setUpdateStatus);
   }, []);
 
   useEffect(() => {
@@ -95,6 +119,8 @@ export function SettingsPanel({ installedIdes }: SettingsPanelProps) {
     setAutostartState(next);
     setAutostartLoading(false);
   }
+
+  const checkingUpdate = updateStatus.state === "checking" || updateStatus.state === "downloading";
 
   return (
     <div className="settings-panel">
@@ -150,6 +176,38 @@ export function SettingsPanel({ installedIdes }: SettingsPanelProps) {
             onChange={handleAutostartToggle}
           />
         </label>
+      </section>
+
+      <section>
+        <h3>Versión</h3>
+        <div className="settings-row">
+          <span>Instalada</span>
+          <span className="status-ok">{appVersion || "…"}</span>
+        </div>
+        <div
+          className={`token-message ${
+            updateStatus.state === "error"
+              ? "token-message-error"
+              : updateStatus.state === "downloaded"
+                ? "token-message-ok"
+                : ""
+          }`}
+        >
+          {updateStatusLabel(updateStatus)}
+        </div>
+        {updateStatus.state === "downloaded" ? (
+          <button className="primary-button" onClick={() => window.api.installUpdate()}>
+            Reiniciar e instalar
+          </button>
+        ) : (
+          <button
+            className="primary-button"
+            disabled={checkingUpdate}
+            onClick={() => window.api.checkForUpdates()}
+          >
+            {checkingUpdate ? "Buscando…" : "Buscar actualizaciones"}
+          </button>
+        )}
       </section>
     </div>
   );

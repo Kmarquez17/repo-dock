@@ -7,6 +7,7 @@ import type {
   TokenUpdateResult,
   RemoteUrlResult,
   RepoGitStatus,
+  UpdateStatus,
 } from "./types";
 
 const api = {
@@ -39,6 +40,15 @@ const api = {
   setShortcut: (accelerator: string): Promise<TokenUpdateResult> => ipcRenderer.invoke("shortcut:set", accelerator),
   getAutostart: (): Promise<boolean> => ipcRenderer.invoke("app:get-autostart"),
   setAutostart: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke("app:set-autostart", enabled),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke("app:get-version"),
+  getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke("update:get-status"),
+  checkForUpdates: (): Promise<void> => ipcRenderer.invoke("update:check"),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke("update:install"),
+  onUpdateStatus: (callback: (status: UpdateStatus) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus) => callback(status);
+    ipcRenderer.on("update:status", listener);
+    return () => ipcRenderer.removeListener("update:status", listener);
+  },
 };
 
 contextBridge.exposeInMainWorld("api", api);

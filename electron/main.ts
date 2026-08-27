@@ -17,7 +17,7 @@ import { openInExplorer, openTerminal } from "./shellActions";
 import { getRemoteInfo, updateRemoteToken, openRemoteInBrowser, getRemoteBrowserUrl } from "./gitRemote";
 import { getRepoGitStatus } from "./gitStatus";
 import { autoUpdater } from "electron-updater";
-import type { TokenUpdateResult } from "./types";
+import type { TokenUpdateResult, UpdateStatus } from "./types";
 
 const isDev = !app.isPackaged;
 const VITE_DEV_SERVER_URL = "http://localhost:5173";
@@ -36,6 +36,21 @@ let tray: Tray | null = null;
 let isDialogOpen = false;
 let lastAutoHideAt = 0;
 let activeShortcut: string | null = null;
+let updateStatus: UpdateStatus = { state: "idle" };
+
+function setUpdateStatus(status: UpdateStatus): void {
+  updateStatus = status;
+  mainWindow?.webContents.send("update:status", status);
+}
+
+autoUpdater.on("checking-for-update", () => setUpdateStatus({ state: "checking" }));
+autoUpdater.on("update-available", (info) => setUpdateStatus({ state: "available", version: info.version }));
+autoUpdater.on("update-not-available", () => setUpdateStatus({ state: "not-available" }));
+autoUpdater.on("download-progress", (progress) =>
+  setUpdateStatus({ state: "downloading", percent: Math.round(progress.percent) })
+);
+autoUpdater.on("update-downloaded", (info) => setUpdateStatus({ state: "downloaded", version: info.version }));
+autoUpdater.on("error", (err) => setUpdateStatus({ state: "error", message: err.message }));
 
 function getWindowPosition(): { x: number; y: number } {
   const display = screen.getPrimaryDisplay();
@@ -282,4 +297,20 @@ ipcMain.handle("app:get-autostart", () => app.getLoginItemSettings().openAtLogin
 ipcMain.handle("app:set-autostart", (_event, enabled: boolean) => {
   app.setLoginItemSettings({ openAtLogin: enabled });
   return app.getLoginItemSettings().openAtLogin;
+});
+
+ipcMain.handle("app:get-version", () => app.getVersion());
+
+ipcMain.handle("update:get-status", () => updateStatus);
+
+ipcMain.handle("update:check", async () => {
+  try {
+    await autoUpdater.checkForUpdates();
+  } catch (err) {
+    setUpdateStatus({ state: "error", message: err instanceof Error ? err.message : "Error desconocido." });
+  }
+});
+
+ipcMain.handle("update:install", () => {
+  autoUpdater.quitAndInstall();
 });
