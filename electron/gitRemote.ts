@@ -1,6 +1,7 @@
 import { execFile } from "child_process";
 import { promisify } from "util";
-import type { GitRemoteInfo, TokenUpdateResult } from "./types";
+import { shell } from "electron";
+import type { GitRemoteInfo, RemoteUrlResult, TokenUpdateResult } from "./types";
 
 const execFileAsync = promisify(execFile);
 
@@ -38,6 +39,43 @@ export async function getRemoteInfo(repoPath: string): Promise<GitRemoteInfo> {
   if (https) return { protocol: "https", host: https.host, url: `https://${https.host}/${https.repoPath}` };
 
   return { protocol: "other", url };
+}
+
+function sshToHttps(url: string): string | null {
+  const scp = url.match(/^git@([^:]+):(.+)$/);
+  const match = scp ?? url.match(/^ssh:\/\/(?:[^@/]+@)?([^/]+)\/(.+)$/);
+  if (!match) return null;
+  return `https://${match[1]}/${match[2].replace(/\.git$/, "")}`;
+}
+
+function toBrowserUrl(url: string): string | null {
+  const https = parseHttps(url);
+  if (https) return `https://${https.host}/${https.repoPath.replace(/\.git$/, "")}`;
+  return sshToHttps(url);
+}
+
+export async function getRemoteBrowserUrl(repoPath: string): Promise<RemoteUrlResult> {
+  let url: string;
+  try {
+    url = await getOriginUrl(repoPath);
+  } catch {
+    return { ok: false, error: "No se encontró un remote 'origin' en este repositorio." };
+  }
+
+  const browserUrl = toBrowserUrl(url);
+  if (!browserUrl) {
+    return { ok: false, error: "No se pudo interpretar la URL del remote." };
+  }
+
+  return { ok: true, url: browserUrl };
+}
+
+export async function openRemoteInBrowser(repoPath: string): Promise<TokenUpdateResult> {
+  const result = await getRemoteBrowserUrl(repoPath);
+  if (!result.ok) return result;
+
+  await shell.openExternal(result.url);
+  return { ok: true };
 }
 
 export async function updateRemoteToken(repoPath: string, token: string): Promise<TokenUpdateResult> {

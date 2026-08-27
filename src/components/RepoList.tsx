@@ -4,13 +4,24 @@ import { RepoItem } from "./RepoItem";
 interface RepoListProps {
   repos: RepoInfo[];
   installedIdes: InstalledIdes;
+  favorites: Set<string>;
   loading: boolean;
   hasRootFolders: boolean;
   onOpen: (idePath: string, repo: RepoInfo) => void;
   onOpenToken: (repo: RepoInfo) => void;
+  onToggleFavorite: (repo: RepoInfo) => void;
 }
 
-export function RepoList({ repos, installedIdes, loading, hasRootFolders, onOpen, onOpenToken }: RepoListProps) {
+export function RepoList({
+  repos,
+  installedIdes,
+  favorites,
+  loading,
+  hasRootFolders,
+  onOpen,
+  onOpenToken,
+  onToggleFavorite,
+}: RepoListProps) {
   if (loading) {
     return <div className="empty-state">Buscando repositorios…</div>;
   }
@@ -26,7 +37,15 @@ export function RepoList({ repos, installedIdes, loading, hasRootFolders, onOpen
   return (
     <ul className="repo-list">
       {repos.map((repo) => (
-        <RepoItem key={repo.path} repo={repo} installedIdes={installedIdes} onOpen={onOpen} onOpenToken={onOpenToken} />
+        <RepoItem
+          key={repo.path}
+          repo={repo}
+          installedIdes={installedIdes}
+          isFavorite={favorites.has(repo.path)}
+          onOpen={onOpen}
+          onOpenToken={onOpenToken}
+          onToggleFavorite={onToggleFavorite}
+        />
       ))}
     </ul>
   );

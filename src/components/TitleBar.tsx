@@ -1,15 +1,26 @@
-import { ArrowLeft, Settings, X } from "lucide-react";
+import { ArrowLeft, Settings, Star, X } from "lucide-react";
 
 interface TitleBarProps {
   title: string;
   showBack: boolean;
   onBack: () => void;
+  favoritesActive: boolean;
+  onToggleFavorites: () => void;
   settingsActive: boolean;
   onToggleSettings: () => void;
   onHide: () => void;
 }
 
-export function TitleBar({ title, showBack, onBack, settingsActive, onToggleSettings, onHide }: TitleBarProps) {
+export function TitleBar({
+  title,
+  showBack,
+  onBack,
+  favoritesActive,
+  onToggleFavorites,
+  settingsActive,
+  onToggleSettings,
+  onHide,
+}: TitleBarProps) {
   return (
     <header className="title-bar">
       <span className="title-bar-drag">
@@ -21,6 +32,13 @@ export function TitleBar({ title, showBack, onBack, settingsActive, onToggleSett
         <span className="title-bar-name">{title}</span>
       </span>
       <div className="title-bar-actions">
+        <button
+          className={`icon-button ${favoritesActive ? "icon-button-active" : ""}`}
+          title="Favoritos"
+          onClick={onToggleFavorites}
+        >
+          <Star size={15} />
+        </button>
         <button
           className={`icon-button ${settingsActive ? "icon-button-active" : ""}`}
           title="Ajustes"

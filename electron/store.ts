@@ -6,6 +6,8 @@ import type { AppConfig, RootFolder } from "./types";
 const defaults: AppConfig = {
   rootFolders: [],
   maxScanDepth: 3,
+  shortcut: "",
+  favorites: [],
 };
 
 export const configStore = new Store<AppConfig>({
@@ -56,4 +58,23 @@ export function removeRootFolder(id: string): RootFolder[] {
     current.filter((f) => f.id !== id)
   );
   return configStore.get("rootFolders");
+}
+
+export function getShortcut(): string {
+  return configStore.get("shortcut");
+}
+
+export function setShortcut(accelerator: string): void {
+  configStore.set("shortcut", accelerator);
+}
+
+export function getFavorites(): string[] {
+  return configStore.get("favorites");
+}
+
+export function toggleFavorite(repoPath: string): string[] {
+  const current = configStore.get("favorites");
+  const next = current.includes(repoPath) ? current.filter((p) => p !== repoPath) : [...current, repoPath];
+  configStore.set("favorites", next);
+  return next;
 }

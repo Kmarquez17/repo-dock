@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MoreVertical, FolderOpen, Terminal, KeyRound, Code2, MousePointer2 } from "lucide-react";
+import { MoreVertical, FolderOpen, Terminal, KeyRound, Code2, MousePointer2, Globe, Copy, Link2 } from "lucide-react";
 import type { InstalledIdes, RepoInfo } from "../types/ipc";
 
 interface RepoActionsMenuProps {
@@ -78,8 +78,32 @@ export function RepoActionsMenu({ repo, installedIdes, onOpen, onOpenToken }: Re
           >
             <FolderOpen size={14} /> Directorio
           </button>
+          <button
+            className="repo-actions-item"
+            onClick={() => runAndClose(() => window.api.copyToClipboard(repo.path))}
+          >
+            <Copy size={14} /> Copiar ruta
+          </button>
           <button className="repo-actions-item" onClick={() => runAndClose(() => window.api.openTerminal(repo.path))}>
             <Terminal size={14} /> Terminal
+          </button>
+          <button
+            className="repo-actions-item"
+            onClick={() => runAndClose(() => window.api.openRemoteInBrowser(repo.path))}
+          >
+            <Globe size={14} /> Abrir remoto
+          </button>
+          <button
+            className="repo-actions-item"
+            onClick={() =>
+              runAndClose(() => {
+                window.api.getRemoteUrl(repo.path).then((result) => {
+                  if (result.ok) window.api.copyToClipboard(result.url);
+                });
+              })
+            }
+          >
+            <Link2 size={14} /> Copiar URL remoto
           </button>
           <button className="repo-actions-item" onClick={() => runAndClose(() => onOpenToken(repo))}>
             <KeyRound size={14} /> Token

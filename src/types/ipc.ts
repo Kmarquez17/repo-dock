@@ -40,6 +40,13 @@ export type GitRemoteInfo =
 
 export type TokenUpdateResult = { ok: true } | { ok: false; error: string };
 
+export type RemoteUrlResult = { ok: true; url: string } | { ok: false; error: string };
+
+export interface RepoGitStatus {
+  branch: string | null;
+  dirty: boolean;
+}
+
 export interface RepoLauncherApi {
   getRootFolders: () => Promise<RootFolder[]>;
   pickFolder: () => Promise<{ path: string; suggestedName: string } | null>;
@@ -53,5 +60,15 @@ export interface RepoLauncherApi {
   openTerminal: (repoPath: string) => Promise<boolean>;
   getRemoteInfo: (repoPath: string) => Promise<GitRemoteInfo>;
   updateRemoteToken: (repoPath: string, token: string) => Promise<TokenUpdateResult>;
+  openRemoteInBrowser: (repoPath: string) => Promise<TokenUpdateResult>;
+  getRemoteUrl: (repoPath: string) => Promise<RemoteUrlResult>;
+  getRepoStatus: (repoPath: string) => Promise<RepoGitStatus | null>;
+  getFavorites: () => Promise<string[]>;
+  toggleFavorite: (repoPath: string) => Promise<string[]>;
+  copyToClipboard: (text: string) => Promise<void>;
   hideWindow: () => Promise<void>;
+  getShortcut: () => Promise<string | null>;
+  setShortcut: (accelerator: string) => Promise<TokenUpdateResult>;
+  getAutostart: () => Promise<boolean>;
+  setAutostart: (enabled: boolean) => Promise<boolean>;
 }

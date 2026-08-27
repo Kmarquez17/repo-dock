@@ -1,5 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron";
-import type { RootFolder, RepoInfo, InstalledIdes, GitRemoteInfo, TokenUpdateResult } from "./types";
+import type {
+  RootFolder,
+  RepoInfo,
+  InstalledIdes,
+  GitRemoteInfo,
+  TokenUpdateResult,
+  RemoteUrlResult,
+  RepoGitStatus,
+} from "./types";
 
 const api = {
   getRootFolders: (): Promise<RootFolder[]> => ipcRenderer.invoke("config:get-root-folders"),
@@ -19,7 +27,18 @@ const api = {
   getRemoteInfo: (repoPath: string): Promise<GitRemoteInfo> => ipcRenderer.invoke("git:get-remote-info", repoPath),
   updateRemoteToken: (repoPath: string, token: string): Promise<TokenUpdateResult> =>
     ipcRenderer.invoke("git:update-remote-token", repoPath, token),
+  openRemoteInBrowser: (repoPath: string): Promise<TokenUpdateResult> =>
+    ipcRenderer.invoke("git:open-remote", repoPath),
+  getRemoteUrl: (repoPath: string): Promise<RemoteUrlResult> => ipcRenderer.invoke("git:get-remote-url", repoPath),
+  getRepoStatus: (repoPath: string): Promise<RepoGitStatus | null> => ipcRenderer.invoke("git:get-status", repoPath),
+  getFavorites: (): Promise<string[]> => ipcRenderer.invoke("config:get-favorites"),
+  toggleFavorite: (repoPath: string): Promise<string[]> => ipcRenderer.invoke("config:toggle-favorite", repoPath),
+  copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke("shell:copy-text", text),
   hideWindow: (): Promise<void> => ipcRenderer.invoke("window:hide"),
+  getShortcut: (): Promise<string | null> => ipcRenderer.invoke("shortcut:get"),
+  setShortcut: (accelerator: string): Promise<TokenUpdateResult> => ipcRenderer.invoke("shortcut:set", accelerator),
+  getAutostart: (): Promise<boolean> => ipcRenderer.invoke("app:get-autostart"),
+  setAutostart: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke("app:set-autostart", enabled),
 };
 
 contextBridge.exposeInMainWorld("api", api);

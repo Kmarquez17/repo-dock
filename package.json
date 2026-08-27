@@ -13,10 +13,12 @@
     "build": "npm run build:renderer && npm run build:electron",
     "electron:dev": "concurrently -k -n VITE,ELECTRON -c blue,green \"npm:dev\" \"npm run build:electron && wait-on tcp:5173 && cross-env NODE_ENV=development electron dist-electron/main.js\"",
     "electron:package:win": "npm run build && electron-builder --win --publish never",
+    "electron:release:win": "npm run build && electron-builder --win --publish always",
     "preview": "vite preview"
   },
   "dependencies": {
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.9",
     "lucide-react": "^1.28.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
@@ -48,6 +50,12 @@
     ],
     "directories": {
       "output": "release"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Kmarquez17",
+      "repo": "repo-dock",
+      "releaseType": "release"
     },
     "win": {
       "target": "nsis",

@@ -1,0 +1,126 @@
+PLAN DE RELEASE - RepoDock
+==========================
+Definido: 2026-08-26
+
+Decisiones ya tomadas con Kevin:
+- Terminal: pwsh.exe (PowerShell 7) directo, mismo mecanismo que hoy (cmd /c start),
+  con fallback a powershell.exe si pwsh no está instalado en la máquina destino.
+  No se toca ningún perfil/config de PowerShell.
+- Atajo global: probar Ctrl+F12 primero; si el registro falla (ya usado por otra
+  app), probar en cadena Ctrl+Alt+R -> Ctrl+Shift+Space -> Ctrl+Alt+F12, y guardar
+  el primero que funcione. Queda visible/editable en Settings.
+- Se agrega single-instance lock: si el usuario abre RepoDock estando ya corriendo
+  (por ejemplo por el autostart), NO se crea un segundo proceso; la instancia
+  existente se muestra y toma foco.
+- Features nuevas confirmadas para el roadmap: estado git por repo, favoritos
+  anclados, copiar path/URL de remoto, auto-actualización con electron-updater.
+
+------------------------------------------------------------
+FASE 0 - Comportamiento base de la ventana (bajo riesgo)
+------------------------------------------------------------
+3. Auto-cierre al hacer click afuera
+   - electron/main.ts: mainWindow.on("blur", () => mainWindow.hide()), igual que
+     ya hace el handler "window:hide" existente.
+   - Cuidado: el diálogo de "elegir carpeta" (dialog.showOpenDialog) y cualquier
+     futuro diálogo nativo disparan blur en la ventana principal. Hay que pasar
+     `mainWindow` como parent en showOpenDialog y/o usar un flag
+     (ej. `isModalOpen`) para ignorar el blur mientras un diálogo está abierto,
+     así no se oculta la ventana con el diálogo todavía en pantalla.
+   - El menú de acciones (RepoActionsMenu) es HTML dentro de la misma ventana,
+     no dispara blur, así que no hay conflicto ahí.
+
+Single-instance lock (pedido por Kevin, ligado al punto 5)
+   - electron/main.ts: app.requestSingleInstanceLock() al arrancar.
+   - Si devuelve false, app.quit() inmediato (ya hay otra instancia corriendo).
+   - app.on("second-instance", ...) → mostrar y enfocar la ventana existente
+     (toggleWindow / mainWindow.show() + focus()), en vez de crear otra.
+
+------------------------------------------------------------
+FASE 1 - Terminal y acción de remoto (electron/shellActions.ts, gitRemote.ts)
+------------------------------------------------------------
+2.1. Arreglar comando de terminal
+   - Detectar pwsh.exe (PowerShell 7) primero; si no existe, usar powershell.exe
+     como hoy. Mismo patrón "cmd /c start" para garantizar ventana nueva visible
+     en app empaquetada. No se modifica ningún perfil ($PROFILE) ni configuración
+     de PowerShell, solo qué ejecutable se lanza.
+   - Confirmado en esta máquina: pwsh.exe está instalado
+     (C:\Program Files\WindowsApps\...PowerShell_7...\pwsh.exe).
+
+2.2. Nuevo comando "Abrir remoto en el navegador"
+   - gitRemote.ts ya expone getRemoteInfo() con protocolo https/ssh/other.
+   - Nuevo helper: si protocolo es https, usar la url tal cual; si es ssh
+     (git@host:owner/repo.git), convertir a https://host/owner/repo para poder
+     abrirlo en navegador.
+   - shell.openExternal(url) desde main; nuevo IPC "git:open-remote".
+   - Nuevo botón en RepoActionsMenu.tsx (icono Globe/ExternalLink de lucide-react),
+     junto a Directorio/Terminal/Token.
+
+------------------------------------------------------------
+FASE 2 - Atajo global + Autostart (Settings)
+------------------------------------------------------------
+4. Atajo global para mostrar/ocultar (ej. Ctrl+F12)
+   - electron/main.ts: globalShortcut.register("CommandOrControl+F12", toggleWindow)
+     en app.whenReady(). Si register() devuelve false (ocupado por otra app),
+     probar la cadena de fallback y persistir cuál quedó activo (electron-store).
+   - Mostrar en SettingsPanel.tsx el atajo actualmente activo, con opción de
+     re-registrar uno distinto (input tipo "presioná la combinación") si el
+     usuario quiere cambiarlo manualmente más adelante.
+   - globalShortcut.unregisterAll() en app.on("will-quit").
+
+5. Autostart (iniciar con Windows) + toggle en la app
+   - electron/main.ts: app.setLoginItemSettings({ openAtLogin: bool }) / leer
+     estado actual con app.getLoginItemSettings().openAtLogin.
+   - Nuevo IPC: "app:get-autostart" / "app:set-autostart".
+   - Nuevo switch en SettingsPanel.tsx: "Iniciar RepoDock con Windows".
+   - Se apoya en el single-instance lock de la Fase 0 para que, si ya estaba
+     abierta manualmente, el autostart no dispare una segunda instancia.
+
+------------------------------------------------------------
+FASE 3 - Logo / branding
+------------------------------------------------------------
+1. Nuevo logo acorde a la app (widget de repos/desarrollo)
+   - Pendiente definir con Kevin: estilo (flat/minimal vs detallado), paleta de
+     color, y si debe incluir alguna referencia a "carpeta + git" o similar.
+   - Una vez definido: generar set completo de tamaños y reemplazar
+     build/icon.ico, build/icon.png, build/icons/icon-*.png (16 a 1024) y
+     electron/assets/icon-16/32/256.png (los que usan la ventana y el tray).
+
+------------------------------------------------------------
+FASE 4 - Features nuevas
+------------------------------------------------------------
+a) Estado git por repo (branch actual + cambios pendientes)
+   - Nuevo IPC que corre `git rev-parse --abbrev-ref HEAD` + `git status --porcelain`
+     por repo. Ejecutar de forma perezosa/cacheada (no para los N repos a la vez
+     en cada escaneo) para no pegarle a IO en carpetas con muchos repos.
+   - UI: badge de rama + punto de "cambios sin commitear" en RepoItem/FolderCard.
+
+b) Repos favoritos / anclados arriba
+   - Nuevo campo en el store (favorites: string[] con el id/path del repo).
+   - Ícono de pin en RepoItem; lista ordenada con favoritos primero.
+
+c) Copiar path / URL del remoto
+   - clipboard.writeText(repo.path) y clipboard.writeText(remoteUrl) como items
+     nuevos en RepoActionsMenu.
+
+d) Auto-actualización (electron-updater)
+   - Requiere publicar releases en GitHub (o similar) y configurar `publish` en
+     electron-builder (package.json → build.publish). Sin esto no hay de dónde
+     auto-actualizar. A definir: ¿el repo va a tener releases públicas en GitHub?
+
+------------------------------------------------------------
+Backlog opcional (sugerencias adicionales, no confirmadas todavía)
+------------------------------------------------------------
+- Ejecutar scripts de package.json directo desde el menú de acciones (para repos
+  Node: "npm run dev", "npm run build", etc. con selector de script).
+- Chequeo periódico de "hay commits nuevos en el remoto" (git fetch en segundo
+  plano) con indicador visual, sin hacer pull automático.
+
+------------------------------------------------------------
+Orden de ejecución sugerido
+------------------------------------------------------------
+1. Fase 0 (auto-cierre + single-instance) - rápido y de bajo riesgo.
+2. Fase 1 (terminal correcta + abrir remoto) - resuelve lo más molesto hoy.
+3. Fase 2 (atajo global + autostart) - completa el flujo de "app siempre a mano".
+4. Fase 4 según prioridad de Kevin (git status y favoritos primero, updater al final
+   porque depende de tener releases publicadas).
+5. Fase 3 (logo) en paralelo cuando Kevin defina estilo/paleta, no bloquea nada técnico.

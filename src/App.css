@@ -134,6 +134,31 @@
   flex: 1;
 }
 
+.favorites-view {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 0 10px;
+}
+
+.favorites-group-title {
+  margin: 14px 16px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.favorites-group:first-child .favorites-group-title {
+  margin-top: 4px;
+}
+
+.repo-list-plain {
+  overflow-y: visible;
+  flex: none;
+  padding: 0 8px;
+}
+
 .repo-item {
   display: flex;
   align-items: center;
@@ -178,6 +203,30 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.repo-favorite-toggle {
+  flex-shrink: 0;
+}
+
+.repo-git-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.repo-git-status-dirty {
+  color: #e0b45c;
+}
+
+.repo-git-dirty-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e0b45c;
 }
 
 .repo-path {
@@ -259,6 +308,74 @@
 
 .status-missing {
   color: var(--text-dim);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.settings-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.shortcut-badge {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.shortcut-badge:hover {
+  border-color: var(--accent);
+}
+
+.toggle-switch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.toggle-switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform 0.15s ease;
+}
+
+.toggle-switch:checked {
+  background: var(--accent);
+}
+
+.toggle-switch:checked::before {
+  transform: translateX(14px);
+  background: #0b0c10;
+}
+
+.toggle-switch:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ---- Folders (home view) ---- */

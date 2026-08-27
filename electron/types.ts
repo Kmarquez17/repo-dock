@@ -35,6 +35,8 @@ export interface RootFolder {
 export interface AppConfig {
   rootFolders: RootFolder[];
   maxScanDepth: number;
+  shortcut: string;
+  favorites: string[];
 }
 
 export type GitRemoteInfo =
@@ -44,3 +46,10 @@ export type GitRemoteInfo =
   | { error: string };
 
 export type TokenUpdateResult = { ok: true } | { ok: false; error: string };
+
+export type RemoteUrlResult = { ok: true; url: string } | { ok: false; error: string };
+
+export interface RepoGitStatus {
+  branch: string | null;
+  dirty: boolean;
+}
